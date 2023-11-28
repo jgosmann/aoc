@@ -57,6 +57,7 @@ impl AocClient {
             .send()
             .await
             .context("HTTP GET")?
+            .error_for_status()?
             .bytes_stream()
             .map(|bytes| bytes.context("reading HTTP response")))
     }
