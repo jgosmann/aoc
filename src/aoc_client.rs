@@ -9,6 +9,7 @@ use reqwest::{
 use secrecy::{ExposeSecret, Secret};
 use tokio_stream::StreamExt;
 
+#[derive(Debug, Clone)]
 pub struct AocClient {
     client: Client,
     base_url: Url,
