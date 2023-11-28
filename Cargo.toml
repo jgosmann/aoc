@@ -1,4 +1,6 @@
 [package]
+authors = ["Jan Gosmann"]
+description = "Advent of Code 2023"
 edition = "2021"
 name = "aoc2023"
 version = "0.1.0"
@@ -8,6 +10,7 @@ version = "0.1.0"
 [dependencies]
 anyhow = "1.0.75"
 bytes = "1.5.0"
+clap = {version = "4.4.10", features = ["derive"]}
 futures-core = "0.3.29"
 inquire = "0.6.2"
 keyring = "2.0.5"
