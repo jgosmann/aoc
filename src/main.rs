@@ -7,6 +7,7 @@ use aoc_client::AocClient;
 use cache::FileCache;
 use clap::{Parser, Subcommand};
 use dirs::cache_dir;
+use lazy_init::Lazy;
 use reqwest::Url;
 use session_id_store::SessionIdStore;
 use tokio::io::AsyncReadExt;
@@ -56,10 +57,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     } else {
-        let client = AocClient::new(
-            Url::parse("https://adventofcode.com/").context("client base URL")?,
-            session_id_store.session_id()?,
-        )?;
+        let client: Lazy<AocClient> = Lazy::new();
+        let create_client = || {
+            AocClient::new(
+                Url::parse("https://adventofcode.com/")
+                    .context("client base URL")
+                    .expect("cannot create HTTP client"),
+                session_id_store.session_id().expect("missing session ID"),
+            )
+            .expect("cannot create AoC client")
+        };
         let cache_path = cache_dir().map_or_else(
             || {
                 eprintln!("Warning: couldn't locate cache directory, using ./aoc-cache");
@@ -68,7 +75,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             |cache_base| cache_base.join("aoc"),
         );
         let input_cache = FileCache::new(cache_path, |key: InputKey| {
-            let client = client.clone();
+            let client = client.get_or_create(create_client);
             async move { client.get_input(key.year, key.day).await }
         })
         .await?;
