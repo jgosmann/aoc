@@ -10,6 +10,7 @@ version = "0.1.0"
 [dependencies]
 anyhow = "1.0.75"
 bytes = "1.5.0"
+chrono = "0.4.31"
 clap = {version = "4.4.10", features = ["derive"]}
 dirs = "5.0.1"
 futures-core = "0.3.29"
