@@ -1,6 +1,10 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod aoc_client;
 mod cache;
 mod session_id_store;
+mod solvers;
 
 use anyhow::Context;
 use aoc_client::AocClient;
@@ -11,7 +15,7 @@ use dirs::cache_dir;
 use lazy_init::Lazy;
 use reqwest::Url;
 use session_id_store::SessionIdStore;
-use tokio::io::AsyncReadExt;
+use solvers::Solver;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about=None)]
@@ -118,10 +122,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
 
             for &day in days.iter() {
-                let mut input = input_cache.get(&InputKey::from_yd(year, day)).await?;
-                let mut buf = String::new();
-                input.read_to_string(&mut buf).await?;
-                println!("{:?}", buf);
+                println!();
+                println!("{}, day {}", year, day);
+
+                let input = input_cache.get(&InputKey::from_yd(year, day)).await?;
+
+                match (year, day) {
+                    (2023, 1) => {
+                        let solver = solvers::year2023::day1::SolverImpl::new(&input)?;
+                        println!("{}", solver.solve_part_1()?);
+                        println!("{}", solver.solve_part_2()?);
+                    }
+                    (2023, 2) => {
+                        let solver = solvers::year2023::day2::SolverImpl::new(&input)?;
+                        println!("{}", solver.solve_part_1()?);
+                        println!("{}", solver.solve_part_2()?);
+                    }
+                    _ => {
+                        println!("not implemented");
+                    }
+                }
             }
         }
     }

@@ -4,7 +4,7 @@ use futures_core::{Future, Stream};
 use std::{marker::PhantomData, path::PathBuf};
 use tokio::{
     fs::{create_dir_all, File},
-    io::{AsyncRead, AsyncWriteExt},
+    io::AsyncWriteExt,
 };
 use tokio_stream::StreamExt;
 
@@ -47,12 +47,15 @@ where
         })
     }
 
-    pub async fn get(&self, key: &K) -> anyhow::Result<impl AsyncRead> {
+    pub async fn get(&self, key: &K) -> anyhow::Result<String> {
         let path = self.path_for_key(key);
         if !path.exists() {
             self.populate(key, &path).await?;
         }
-        Ok(File::open(path).await?)
+        let input = tokio::fs::read(&path)
+            .await
+            .context(format!("read from {}", path.display()))?;
+        Ok(String::from_utf8(input)?)
     }
 
     pub async fn populate(&self, key: &K, path: &PathBuf) -> anyhow::Result<()> {

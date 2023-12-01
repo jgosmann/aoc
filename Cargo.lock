@@ -120,6 +120,8 @@ dependencies = [
  "inquire",
  "keyring",
  "lazy-init",
+ "lazy_static",
+ "regex",
  "reqwest",
  "secrecy",
  "tokio",
