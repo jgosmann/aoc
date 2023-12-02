@@ -9,6 +9,7 @@ mod cache;
 mod session_id_store;
 mod solvers;
 
+use ansi_term::Style;
 use anyhow::Context;
 use aoc_client::AocClient;
 use cache::FileCache;
@@ -126,12 +127,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             for &day in days.iter() {
                 println!();
-                println!("{}, day {}", year, day);
+                println!(
+                    "📆 {}",
+                    Style::new().underline().paint(format!(
+                        "{}, day {}",
+                        year,
+                        Style::new().bold().paint(day.to_string())
+                    ))
+                );
 
                 let input = input_cache.get(&InputKey::from_yd(year, day)).await?;
                 let solver: Box<dyn Solver> = solver_dispatch!(input, year, day)?;
-                println!("{}", solver.solve_part_1()?);
-                println!("{}", solver.solve_part_2()?);
+                println!("⭐ {}", solver.solve_part_1()?);
+                println!("⭐ {}", solver.solve_part_2()?);
             }
         }
     }

@@ -2,6 +2,7 @@ pub mod year2023 {
     automod::dir!(pub "src/solvers/year2023");
 }
 
+use ansi_term::Style;
 use std::fmt::Display;
 
 pub trait Solver<'input> {
@@ -56,6 +57,10 @@ impl Solution {
 
 impl Display for Solution {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}: {}", self.description, self.solution))
+        f.write_fmt(format_args!(
+            "{}: {}",
+            self.description,
+            Style::new().bold().paint(&self.solution)
+        ))
     }
 }
