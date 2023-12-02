@@ -1,4 +1,6 @@
-pub mod year2023;
+pub mod year2023 {
+    automod::dir!(pub "src/solvers/year2023");
+}
 
 use std::fmt::Display;
 
