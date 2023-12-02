@@ -125,6 +125,7 @@ dependencies = [
  "regex",
  "reqwest",
  "secrecy",
+ "solver-dispatch",
  "tokio",
  "tokio-stream",
 ]
@@ -1924,6 +1925,15 @@ checksum = "7b5fac59a5cb5dd637972e5fca70daf0523c9067fcdc4842f053dae04a18f8e9"
 dependencies = [
  "libc",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "solver-dispatch"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.39",
 ]
 
 [[package]]

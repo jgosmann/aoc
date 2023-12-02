@@ -1,0 +1,16 @@
+[package]
+authors = ["Jan Gosmann"]
+description = "Proc macro to dispatch to an advent of code solver"
+edition = "2021"
+name = "solver-dispatch"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.70"
+quote = "1.0.33"
+syn = "2.0.39"

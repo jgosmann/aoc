@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate solver_dispatch;
+
 mod aoc_client;
 mod cache;
 mod session_id_store;
@@ -126,22 +129,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("{}, day {}", year, day);
 
                 let input = input_cache.get(&InputKey::from_yd(year, day)).await?;
-
-                match (year, day) {
-                    (2023, 1) => {
-                        let solver = solvers::year2023::day1::SolverImpl::new(&input)?;
-                        println!("{}", solver.solve_part_1()?);
-                        println!("{}", solver.solve_part_2()?);
-                    }
-                    (2023, 2) => {
-                        let solver = solvers::year2023::day2::SolverImpl::new(&input)?;
-                        println!("{}", solver.solve_part_1()?);
-                        println!("{}", solver.solve_part_2()?);
-                    }
-                    _ => {
-                        println!("not implemented");
-                    }
-                }
+                let solver: Box<dyn Solver> = solver_dispatch!(input, year, day)?;
+                println!("{}", solver.solve_part_1()?);
+                println!("{}", solver.solve_part_2()?);
             }
         }
     }
