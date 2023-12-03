@@ -6,6 +6,7 @@ extern crate solver_dispatch;
 
 mod aoc_client;
 mod cache;
+mod datastructures;
 mod session_id_store;
 mod solvers;
 

@@ -26,3 +26,6 @@ secrecy = "0.8.0"
 solver-dispatch = {path = "./solver-dispatch"}
 tokio = {version = "1.34.0", features = ["macros", "rt-multi-thread"]}
 tokio-stream = "0.1.14"
+
+[dev-dependencies]
+rstest = "0.18.2"

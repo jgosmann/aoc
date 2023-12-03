@@ -1,5 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./solver-dispatch/Cargo.toml"
+        "./solver-dispatch/Cargo.toml",
+        "./Cargo.toml"
     ]
 }
