@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     datastructures::{grid::GridView, iterators::NeighborIterator2d},
-    solvers::{MaybeSolution, Solution, Solver},
+    solvers::{Solution, Solver},
 };
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
@@ -103,11 +103,11 @@ impl<'input> Solver<'input> for SolverImpl {
         ))
     }
 
-    fn solve_part_2(&self) -> anyhow::Result<MaybeSolution> {
-        Ok(MaybeSolution::Present(Solution::with_description(
+    fn solve_part_2(&self) -> anyhow::Result<Solution> {
+        Ok(Solution::with_description(
             "Sum of gear ratios",
             self.gear_ratio_sum.to_string(),
-        )))
+        ))
     }
 }
 
@@ -126,7 +126,7 @@ mod test {
     #[test]
     fn test_example_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day3-1.example"))?;
-        assert_eq!(solver.solve_part_2()?.unwrap().solution, "467835");
+        assert_eq!(solver.solve_part_2()?.solution, "467835");
         Ok(())
     }
 }

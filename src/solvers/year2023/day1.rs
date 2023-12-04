@@ -14,7 +14,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
         Ok(Self { input })
     }
 
-    fn solve_part_1(&self) -> anyhow::Result<crate::solvers::Solution> {
+    fn solve_part_1(&self) -> anyhow::Result<Solution> {
         let solution: u32 = self
             .input
             .lines()
@@ -38,7 +38,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
         ))
     }
 
-    fn solve_part_2(&self) -> anyhow::Result<crate::solvers::MaybeSolution> {
+    fn solve_part_2(&self) -> anyhow::Result<Solution> {
         lazy_static! {
             static ref DIGITS: Regex =
                 Regex::new("[1-9]|one|two|three|four|five|six|seven|eight|nine").unwrap();
@@ -62,9 +62,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
             })
             .sum();
 
-        Ok(crate::solvers::MaybeSolution::Present(
-            Solution::with_description("Calibration sum (part 2)", solution.to_string()),
-        ))
+        Ok(Solution::with_description("Calibration sum (part 2)", solution.to_string()))
     }
 }
 
@@ -103,7 +101,7 @@ mod test {
     #[test]
     fn test_exapmle_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day1-2.example"))?;
-        assert_eq!(solver.solve_part_2()?.unwrap().solution, "281");
+        assert_eq!(solver.solve_part_2()?.solution, "281");
         Ok(())
     }
 }

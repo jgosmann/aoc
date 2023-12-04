@@ -1,4 +1,4 @@
-use crate::solvers::{MaybeSolution, Solution, Solver};
+use crate::solvers::{Solution, Solver};
 use regex::Regex;
 use std::collections::BTreeSet;
 use std::num::ParseIntError;
@@ -43,7 +43,7 @@ impl<'input> Solver<'input> for SolverImpl {
         Ok(Solution::with_description("Points", points.to_string()))
     }
 
-    fn solve_part_2(&self) -> anyhow::Result<MaybeSolution> {
+    fn solve_part_2(&self) -> anyhow::Result<Solution> {
         let mut n_copies = vec![1; self.num_winning.len()];
         let mut total_cards = 0;
         for i in 0..self.num_winning.len() {
@@ -53,10 +53,10 @@ impl<'input> Solver<'input> for SolverImpl {
             }
         }
 
-        Ok(MaybeSolution::Present(Solution::with_description(
+        Ok(Solution::with_description(
             "Number of scratch cards",
             total_cards.to_string(),
-        )))
+        ))
     }
 }
 
@@ -75,7 +75,7 @@ mod test {
     #[test]
     fn test_example_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day4-1.example"))?;
-        assert_eq!(solver.solve_part_2()?.unwrap().solution, "30");
+        assert_eq!(solver.solve_part_2()?.solution, "30");
         Ok(())
     }
 }

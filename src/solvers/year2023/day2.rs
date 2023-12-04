@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use regex::Regex;
 
-use crate::solvers::{MaybeSolution, Solution, Solver};
+use crate::solvers::{Solution, Solver};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 struct Reveal {
@@ -119,11 +119,11 @@ impl<'input> Solver<'input> for SolverImpl {
         ))
     }
 
-    fn solve_part_2(&self) -> anyhow::Result<MaybeSolution> {
-        Ok(MaybeSolution::Present(Solution::with_description(
+    fn solve_part_2(&self) -> anyhow::Result<Solution> {
+        Ok(Solution::with_description(
             "Sum of the power",
             self.part2.to_string(),
-        )))
+        ))
     }
 }
 
@@ -143,7 +143,7 @@ mod test {
     #[test]
     fn test_example_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day2-1.example"))?;
-        assert_eq!(solver.solve_part_2()?.unwrap().solution, "2286");
+        assert_eq!(solver.solve_part_2()?.solution, "2286");
         Ok(())
     }
 }
