@@ -10,6 +10,7 @@ mod datastructures;
 mod session_id_store;
 mod solvers;
 
+use ansi_term::Color::Yellow;
 use ansi_term::Style;
 use anyhow::Context;
 use aoc_client::AocClient;
@@ -21,9 +22,11 @@ use lazy_init::Lazy;
 use reqwest::Url;
 use session_id_store::SessionIdStore;
 use solvers::Solver;
+use std::path::{Path, PathBuf};
+use tokio::try_join;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about=None)]
+#[command(author, version, about, long_about = None)]
 struct MainArgs {
     /// Command to run. Default is "solve".
     #[command(subcommand)]
@@ -39,6 +42,8 @@ enum Command {
     SetSessionId,
     /// Solve puzzles.
     Solve(SolveArgs),
+    /// Create module for a day from template.
+    Create(SolveArgs),
 }
 
 #[derive(Args, Clone, Debug)]
@@ -53,6 +58,26 @@ struct SolveArgs {
     /// year.
     #[arg(short = 'y', long = "year")]
     year: Option<i32>,
+}
+
+struct RequestedDays {
+    pub year: i32,
+    pub days: Vec<u32>,
+}
+
+impl From<SolveArgs> for RequestedDays {
+    fn from(value: SolveArgs) -> Self {
+        let date = (value.year, value.days);
+        if let (Some(year), Some(days)) = date {
+            Self { year, days }
+        } else {
+            let current_date = get_current_aoc_date();
+            Self {
+                year: date.0.unwrap_or(current_date.year()),
+                days: date.1.unwrap_or_else(|| vec![current_date.day()]),
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -81,6 +106,23 @@ fn get_current_aoc_date() -> NaiveDate {
         .date_naive()
 }
 
+async fn write_if_non_existent<P: AsRef<Path>>(path: P, content: &str) -> anyhow::Result<()> {
+    if tokio::fs::try_exists(&path).await? {
+        eprintln!(
+            "{} {}{}{}",
+            Yellow.bold().paint("Warning:"),
+            Yellow.paint("file '"),
+            Yellow.paint(path.as_ref().display().to_string()),
+            Yellow.paint("' already exists, skipping")
+        );
+    } else {
+        tokio::fs::write(&path, content)
+            .await
+            .with_context(|| format!("writing file: {}", path.as_ref().display()))?;
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = MainArgs::parse();
@@ -92,16 +134,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             session_id_store.prompt()?;
         }
         Command::Solve(solve_args) => {
-            let date = (solve_args.year, solve_args.days);
-            let (year, days) = if let (Some(year), Some(days)) = date {
-                (year, days)
-            } else {
-                let current_date = get_current_aoc_date();
-                (
-                    date.0.unwrap_or(current_date.year()),
-                    date.1.unwrap_or_else(|| vec![current_date.day()]),
-                )
-            };
+            let RequestedDays { year, days } = solve_args.into();
 
             let client: Lazy<AocClient> = Lazy::new();
             let create_client = || {
@@ -141,6 +174,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let solver: Box<dyn Solver> = solver_dispatch!(input, year, day)?;
                 println!("⭐ {}", solver.solve_part_1()?);
                 println!("⭐ {}", solver.solve_part_2()?);
+            }
+        }
+        Command::Create(solve_args) => {
+            static TEMPLATE: &str = include_str!("day.rs.template");
+
+            let RequestedDays { year, days } = solve_args.into();
+            let base_path = PathBuf::from(format!("src/solvers/year{}", year));
+            tokio::fs::create_dir_all(&base_path)
+                .await
+                .with_context(|| format!("creating directories: {}", base_path.display()))?;
+
+            for day in days {
+                let day_path = base_path.join(format!("day{}.rs", day));
+                let example_path = base_path.join(format!("day{}-1.example", day));
+                let source_content = TEMPLATE.replace("{{day}}", &day.to_string());
+                try_join!(
+                    write_if_non_existent(day_path, &source_content),
+                    write_if_non_existent(example_path, "")
+                )?;
             }
         }
     }
