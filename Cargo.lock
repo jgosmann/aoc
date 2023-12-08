@@ -132,6 +132,7 @@ dependencies = [
  "keyring",
  "lazy-init",
  "lazy_static",
+ "num",
  "regex",
  "reqwest",
  "rstest",
