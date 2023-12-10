@@ -1,12 +1,25 @@
-use std::ops::{Index, Range};
+use std::ops::{Index, IndexMut, Range};
 
-pub struct GridView<'a, T> {
+pub struct GridView<T> {
     width: usize,
     pub_size: (usize, usize),
-    data: &'a [T],
+    data: T,
 }
 
-impl<'a, T> GridView<'a, T> {
+impl<T> GridView<Vec<T>> {
+    pub fn from_vec(width: usize, separator_width: usize, data: Vec<T>) -> Self {
+        if data.len() % width > 0 && data.len() % width < width - separator_width - 1 {
+            panic!("width must be a divisor of total data length");
+        }
+        Self {
+            width,
+            pub_size: ((data.len() + width - 1) / width, width - separator_width),
+            data,
+        }
+    }
+}
+
+impl<'a, T> GridView<&'a [T]> {
     pub fn new(width: usize, separator_width: usize, data: &'a [T]) -> Self {
         if data.len() % width > 0 && data.len() % width < width - separator_width - 1 {
             panic!("width must be a divisor of total data length");
@@ -14,7 +27,7 @@ impl<'a, T> GridView<'a, T> {
         Self {
             width,
             data,
-            pub_size: (width - separator_width, (data.len() + width - 1) / width),
+            pub_size: ((data.len() + width - 1) / width, width - separator_width),
         }
     }
 
@@ -28,24 +41,19 @@ impl<'a, T> GridView<'a, T> {
             .unwrap_or(data.len());
         Self::new(width + 1, 1, data)
     }
+}
 
+impl<T> GridView<T> {
     pub fn size(&self) -> (usize, usize) {
         self.pub_size
     }
 
     pub fn width(&self) -> usize {
-        self.pub_size.0
-    }
-
-    pub fn height(&self) -> usize {
         self.pub_size.1
     }
 
-    pub fn iter<'b>(&'b self) -> impl Iterator<Item = T> + 'b
-    where
-        T: Copy,
-    {
-        GridIterator::<'b, 'a, T>::new(self)
+    pub fn height(&self) -> usize {
+        self.pub_size.0
     }
 
     pub fn nth_index(&self, n: usize) -> (usize, usize) {
@@ -53,18 +61,70 @@ impl<'a, T> GridView<'a, T> {
     }
 }
 
-impl<'a, T> Index<(usize, usize)> for GridView<'a, T> {
+impl<T> GridView<T>
+where
+    GridView<T>: Index<(usize, usize)>,
+    <GridView<T> as Index<(usize, usize)>>::Output: Copy + Sized,
+{
+    pub fn iter<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = <GridView<T> as Index<(usize, usize)>>::Output> + 'a {
+        GridIterator::new(self)
+    }
+}
+
+impl<T> Index<(usize, usize)> for GridView<&[T]> {
     type Output = T;
 
     fn index(&self, index: (usize, usize)) -> &Self::Output {
         if index.1 >= self.width() {
             panic!("index exceeds view dimensions");
         }
-        &self.data[self.width * index.0 + index.1]
+        self.data.index(self.width * index.0 + index.1)
     }
 }
 
-impl<'a, T> Index<(usize, Range<usize>)> for GridView<'a, T> {
+impl<T> Index<(usize, usize)> for GridView<&mut [T]> {
+    type Output = T;
+
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        if index.1 >= self.width() {
+            panic!("index exceeds view dimensions");
+        }
+        self.data.index(self.width * index.0 + index.1)
+    }
+}
+
+impl<T> IndexMut<(usize, usize)> for GridView<&mut [T]> {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+        if index.1 >= self.width() {
+            panic!("index exceeds view dimensions");
+        }
+        self.data.index_mut(self.width * index.0 + index.1)
+    }
+}
+
+impl<T> Index<(usize, usize)> for GridView<Vec<T>> {
+    type Output = T;
+
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        if index.1 >= self.width() {
+            panic!("index exceeds view dimensions");
+        }
+        self.data.index(self.width * index.0 + index.1)
+    }
+}
+
+impl<T> IndexMut<(usize, usize)> for GridView<Vec<T>> {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+        if index.1 >= self.width() {
+            panic!("index exceeds view dimensions");
+        }
+        self.data.index_mut(self.width * index.0 + index.1)
+    }
+}
+
+impl<T> Index<(usize, Range<usize>)> for GridView<&[T]> {
     type Output = [T];
 
     fn index(&self, index: (usize, Range<usize>)) -> &Self::Output {
@@ -72,18 +132,19 @@ impl<'a, T> Index<(usize, Range<usize>)> for GridView<'a, T> {
             panic!("index exceeds view dimensions");
         }
         let row_start = self.width * index.0;
-        &self.data[row_start + index.1.start..row_start + index.1.end]
+        self.data
+            .index(row_start + index.1.start..row_start + index.1.end)
     }
 }
 
-struct GridIterator<'a, 'b, T> {
-    grid: &'a GridView<'b, T>,
+struct GridIterator<'a, T> {
+    grid: &'a GridView<T>,
     row: usize,
     col: usize,
 }
 
-impl<'a, 'b, T> GridIterator<'a, 'b, T> {
-    pub fn new(grid: &'a GridView<'b, T>) -> Self {
+impl<'a, T> GridIterator<'a, T> {
+    pub fn new(grid: &'a GridView<T>) -> Self {
         Self {
             grid,
             row: 0,
@@ -92,11 +153,12 @@ impl<'a, 'b, T> GridIterator<'a, 'b, T> {
     }
 }
 
-impl<'a, 'b, T> Iterator for GridIterator<'a, 'b, T>
+impl<'a, T> Iterator for GridIterator<'a, T>
 where
-    T: Copy,
+    GridView<T>: Index<(usize, usize)>,
+    <GridView<T> as Index<(usize, usize)>>::Output: Copy + Sized,
 {
-    type Item = T;
+    type Item = <GridView<T> as Index<(usize, usize)>>::Output;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.row >= self.grid.height() {

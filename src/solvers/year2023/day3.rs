@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    datastructures::{grid::GridView, iterators::NeighborIterator2d},
+    datastructures::{grid::GridView, iterators::SurroundIterator2d},
     solvers::{Solution, Solver},
 };
 
@@ -23,7 +23,7 @@ impl PartNumberLoc {
     }
 }
 
-impl<'a, T> Index<PartNumberLoc> for GridView<'a, T> {
+impl<T> Index<PartNumberLoc> for GridView<&[T]> {
     type Output = [T];
 
     fn index(&self, index: PartNumberLoc) -> &Self::Output {
@@ -31,7 +31,7 @@ impl<'a, T> Index<PartNumberLoc> for GridView<'a, T> {
     }
 }
 
-fn get_part_number_loc(grid: &GridView<'_, u8>, seed: (usize, usize)) -> Option<PartNumberLoc> {
+fn get_part_number_loc(grid: &GridView<&[u8]>, seed: (usize, usize)) -> Option<PartNumberLoc> {
     if !grid[seed].is_ascii_digit() {
         return None;
     }
@@ -73,7 +73,7 @@ impl<'input> Solver<'input> for SolverImpl {
                 }
 
                 let part_number_locs: BTreeSet<PartNumberLoc> =
-                    NeighborIterator2d::new((i, j), schematic.size())
+                    SurroundIterator2d::new((i, j), schematic.size())
                         .filter_map(|neighbor| get_part_number_loc(&schematic, neighbor))
                         .collect();
                 let part_numbers: Vec<u32> = part_number_locs
