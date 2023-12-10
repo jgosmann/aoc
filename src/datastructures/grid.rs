@@ -40,6 +40,17 @@ impl<'a, T> GridView<'a, T> {
     pub fn height(&self) -> usize {
         self.pub_size.1
     }
+
+    pub fn iter<'b>(&'b self) -> impl Iterator<Item = T> + 'b
+    where
+        T: Copy,
+    {
+        GridIterator::<'b, 'a, T>::new(self)
+    }
+
+    pub fn nth_index(&self, n: usize) -> (usize, usize) {
+        (n / self.width(), n % self.width())
+    }
 }
 
 impl<'a, T> Index<(usize, usize)> for GridView<'a, T> {
@@ -65,10 +76,46 @@ impl<'a, T> Index<(usize, Range<usize>)> for GridView<'a, T> {
     }
 }
 
+struct GridIterator<'a, 'b, T> {
+    grid: &'a GridView<'b, T>,
+    row: usize,
+    col: usize,
+}
+
+impl<'a, 'b, T> GridIterator<'a, 'b, T> {
+    pub fn new(grid: &'a GridView<'b, T>) -> Self {
+        Self {
+            grid,
+            row: 0,
+            col: 0,
+        }
+    }
+}
+
+impl<'a, 'b, T> Iterator for GridIterator<'a, 'b, T>
+where
+    T: Copy,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.row >= self.grid.height() {
+            return None;
+        }
+        let current = self.grid[(self.row, self.col)];
+        self.col += 1;
+        if self.col >= self.grid.width() {
+            self.col = 0;
+            self.row += 1;
+        }
+        Some(current)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use rstest::rstest;
-    use std::ops::Range;
+    use std::{ops::Range, vec};
 
     use super::GridView;
 
@@ -126,5 +173,18 @@ mod test {
     fn test_invalid_grid_view_range_indexing(#[case] index: (usize, Range<usize>)) {
         let grid = GridView::new(5, 2, &DATA[0..10]);
         let _ = &grid[index];
+    }
+
+    #[test]
+    fn test_iterating_over_grid() {
+        let grid = GridView::new(5, 2, &DATA[0..10]);
+        let items: Vec<_> = grid.iter().collect();
+        assert_eq!(items, vec![0, 1, 2, 5, 6, 7]);
+    }
+
+    #[test]
+    fn test_nth_index() {
+        let grid = GridView::new(5, 2, &DATA[0..10]);
+        assert_eq!(grid.nth_index(5), (1, 2));
     }
 }
