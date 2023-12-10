@@ -3,13 +3,13 @@ const RIGHT: u8 = 0b0100;
 const BOTTOM: u8 = 0b0010;
 const LEFT: u8 = 0b0001;
 
-pub struct NeighborIterator2d {
+pub struct SurroundIterator2d {
     center: (usize, usize),
     sides: u8,
     index: usize,
 }
 
-impl NeighborIterator2d {
+impl SurroundIterator2d {
     pub fn new(center: (usize, usize), size: (usize, usize)) -> Self {
         let top = if center.0 > 0 { TOP } else { 0 };
         let bottom = if center.0 < size.0 - 1 { BOTTOM } else { 0 };
@@ -45,7 +45,7 @@ impl NeighborIterator2d {
     }
 }
 
-impl Iterator for NeighborIterator2d {
+impl Iterator for SurroundIterator2d {
     type Item = (usize, usize);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -60,23 +60,23 @@ impl Iterator for NeighborIterator2d {
 
 #[cfg(test)]
 mod test {
-    use super::NeighborIterator2d;
+    use super::SurroundIterator2d;
 
     #[test]
-    fn test_neighbor_iterator_2d_upper_left() {
-        let indices: Vec<_> = NeighborIterator2d::new((0, 0), (3, 3)).collect();
+    fn test_surround_iterator_2d_upper_left() {
+        let indices: Vec<_> = SurroundIterator2d::new((0, 0), (3, 3)).collect();
         assert_eq!(indices, vec![(0, 1), (1, 0), (1, 1)]);
     }
 
     #[test]
-    fn test_neighbor_iterator_2d_lower_right() {
-        let indices: Vec<_> = NeighborIterator2d::new((2, 2), (3, 3)).collect();
+    fn test_surround_iterator_2d_lower_right() {
+        let indices: Vec<_> = SurroundIterator2d::new((2, 2), (3, 3)).collect();
         assert_eq!(indices, vec![(1, 1), (1, 2), (2, 1)]);
     }
 
     #[test]
-    fn test_neighbor_iterator_2d_middle() {
-        let indices: Vec<_> = NeighborIterator2d::new((1, 1), (3, 3)).collect();
+    fn test_surround_iterator_2d_middle() {
+        let indices: Vec<_> = SurroundIterator2d::new((1, 1), (3, 3)).collect();
         assert_eq!(
             indices,
             vec![
