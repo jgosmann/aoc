@@ -58,9 +58,48 @@ impl Iterator for SurroundIterator2d {
     }
 }
 
+pub struct NeighborIterator2d {
+    center: (usize, usize),
+    size: (usize, usize),
+    index: usize,
+}
+
+impl NeighborIterator2d {
+    pub fn new(center: (usize, usize), size: (usize, usize)) -> Self {
+        Self {
+            center,
+            size,
+            index: 0,
+        }
+    }
+
+    fn current(&self) -> Option<(usize, usize)> {
+        match self.index {
+            1 if self.center.0 > 0 => Some((self.center.0 - 1, self.center.1)),
+            2 if self.center.1 > 0 => Some((self.center.0, self.center.1 - 1)),
+            3 if self.center.0 < self.size.0 - 1 => Some((self.center.0 + 1, self.center.1)),
+            4 if self.center.1 < self.size.1 - 1 => Some((self.center.0, self.center.1 + 1)),
+            _ => None,
+        }
+    }
+}
+
+impl Iterator for NeighborIterator2d {
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut current = None;
+        while self.index < 4 && current.is_none() {
+            self.index += 1;
+            current = self.current()
+        }
+        current
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use super::SurroundIterator2d;
+    use super::{NeighborIterator2d, SurroundIterator2d};
 
     #[test]
     fn test_surround_iterator_2d_upper_left() {
@@ -90,5 +129,23 @@ mod test {
                 (2, 2)
             ]
         );
+    }
+
+    #[test]
+    fn test_neighbor_iterator_2d_upper_left() {
+        let indices: Vec<_> = NeighborIterator2d::new((0, 0), (3, 3)).collect();
+        assert_eq!(indices, vec![(1, 0), (0, 1)]);
+    }
+
+    #[test]
+    fn test_neighbor_iterator_2d_lower_right() {
+        let indices: Vec<_> = NeighborIterator2d::new((2, 2), (3, 3)).collect();
+        assert_eq!(indices, vec![(1, 2), (2, 1)]);
+    }
+
+    #[test]
+    fn test_neighbor_iterator_2d_middle() {
+        let indices: Vec<_> = NeighborIterator2d::new((1, 1), (3, 3)).collect();
+        assert_eq!(indices, vec![(0, 1), (1, 0), (2, 1), (1, 2),]);
     }
 }
