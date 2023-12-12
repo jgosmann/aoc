@@ -1,5 +1,6 @@
 use crate::solvers::{Solution, Solver};
 use anyhow::anyhow;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum StateClass {
@@ -126,27 +127,59 @@ impl Default for State {
     }
 }
 
-fn process(input: &[u8], groups: &[usize]) -> usize {
-    let mut states = vec![State::default()];
-    for &byte in input {
-        states = states
-            .into_iter()
-            .flat_map(|state| state.next(byte, groups))
-            .collect();
+struct ArrangementCounter<'input> {
+    input: &'input [u8],
+    groups: &'input [usize],
+    cache: HashMap<(usize, State), usize>,
+}
+
+impl<'input> ArrangementCounter<'input> {
+    pub fn count(input: &'input [u8], groups: &'input [usize]) -> usize {
+        Self {
+            input,
+            groups,
+            cache: HashMap::new(),
+        }
+        .process()
     }
-    states
-        .into_iter()
-        .filter(|state| state.is_terminating(groups))
-        .count()
+
+    fn process(&mut self) -> usize {
+        self.step(0, State::default())
+    }
+
+    fn step(&mut self, idx: usize, state: State) -> usize {
+        if idx >= self.input.len() {
+            if state.is_terminating(self.groups) {
+                1
+            } else {
+                0
+            }
+        } else if let Some(&result) = self.cache.get(&(idx, state)) {
+            result
+        } else {
+            let next_states = state.next(self.input[idx], self.groups);
+            let result = next_states
+                .into_iter()
+                .map(|next_state| self.step(idx + 1, next_state))
+                .sum();
+            self.cache.insert((idx, state), result);
+            result
+        }
+    }
 }
 
-pub struct SolverImpl {
-    num_arrangements: usize,
+struct ParsedLine<'input> {
+    springs: &'input str,
+    groups: Vec<usize>,
 }
 
-impl<'input> Solver<'input> for SolverImpl {
+pub struct SolverImpl<'input> {
+    lines: Vec<ParsedLine<'input>>,
+}
+
+impl<'input> Solver<'input> for SolverImpl<'input> {
     fn new(input: &'input str) -> anyhow::Result<Self> {
-        let num_arrangements = input
+        let lines = input
             .lines()
             .map(|line| {
                 let (springs, group_def) = line
@@ -156,25 +189,39 @@ impl<'input> Solver<'input> for SolverImpl {
                     .split(',')
                     .map(|group| group.parse::<usize>())
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(process(springs.as_bytes(), &groups))
+                Ok(ParsedLine { springs, groups })
             })
-            .collect::<anyhow::Result<Vec<usize>>>()?
-            .iter()
-            .sum();
-        Ok(Self { num_arrangements })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        Ok(Self { lines })
     }
 
     fn solve_part_1(&self) -> anyhow::Result<Solution> {
+        let num_arrangements: usize = self
+            .lines
+            .iter()
+            .map(|line| ArrangementCounter::count(line.springs.as_bytes(), &line.groups))
+            .sum();
         Ok(Solution::with_description(
-            "Part 1",
-            self.num_arrangements.to_string(),
+            "Possible arrangements sum (part 1)",
+            num_arrangements.to_string(),
         ))
     }
 
     fn solve_part_2(&self) -> anyhow::Result<Solution> {
+        let num_arrangements: usize = self
+            .lines
+            .iter()
+            .map(|line| {
+                let springs = format!("{}?", line.springs).repeat(5);
+                let springs = springs.as_bytes();
+                let springs = &springs[0..springs.len() - 1];
+                let groups = line.groups.repeat(5);
+                ArrangementCounter::count(springs, &groups)
+            })
+            .sum();
         Ok(Solution::with_description(
-            "Part 2",
-            "not implemented".to_string(),
+            "Possible arrangements sum (part 2)",
+            num_arrangements.to_string(),
         ))
     }
 }
@@ -194,7 +241,7 @@ mod test {
     #[test]
     fn test_example_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day12-1.example"))?;
-        assert_eq!(solver.solve_part_2()?.solution, "TODO");
+        assert_eq!(solver.solve_part_2()?.solution, "525152");
         Ok(())
     }
 }
