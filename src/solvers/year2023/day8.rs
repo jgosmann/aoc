@@ -77,13 +77,13 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
             .network
             .keys()
             .copied()
-            .filter(|node| node.ends_with("A"));
+            .filter(|node| node.ends_with('A'));
         let steps_per_start_node = start_nodes
-            .map(|node| self.solve(node, |node| node.ends_with("Z")))
+            .map(|node| self.solve(node, |node| node.ends_with('Z')))
             .collect::<anyhow::Result<Vec<_>>>()?;
         let n_steps = steps_per_start_node
             .into_iter()
-            .reduce(|a, b| num::integer::lcm(a, b))
+            .reduce(num::integer::lcm)
             .expect("at least one start node must exist");
         Ok(Solution::with_description(
             "Steps to be only on nodes ending with Z",

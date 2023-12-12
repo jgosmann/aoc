@@ -40,13 +40,13 @@ where
         let start_dir =
             if start_tile.0 > 0 && b"F7|".contains(&grid[(start_tile.0 - 1, start_tile.1)]) {
                 Dir::North
-            } else if start_tile.0 <= grid.height() - 1
+            } else if start_tile.0 < grid.height()
                 && b"LJ|".contains(&grid[(start_tile.0 + 1, start_tile.1)])
             {
                 Dir::South
             } else if start_tile.1 > 0 && b"FL-".contains(&grid[(start_tile.0, start_tile.1 - 1)]) {
                 Dir::West
-            } else if start_tile.1 <= grid.width() - 1
+            } else if start_tile.1 < grid.width()
                 && b"7J-".contains(&grid[(start_tile.0, start_tile.1 + 1)])
             {
                 Dir::East
@@ -72,10 +72,8 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let next_tile = match self.next_dir {
             Some(Dir::North) if self.row > 0 => Some((self.row - 1, self.col)),
-            Some(Dir::South) if self.row <= self.grid.height() - 1 => {
-                Some((self.row + 1, self.col))
-            }
-            Some(Dir::East) if self.col <= self.grid.width() - 1 => Some((self.row, self.col + 1)),
+            Some(Dir::South) if self.row < self.grid.height() => Some((self.row + 1, self.col)),
+            Some(Dir::East) if self.col < self.grid.width() => Some((self.row, self.col + 1)),
             Some(Dir::West) if self.col > 0 => Some((self.row, self.col - 1)),
             _ => None,
         }?;
@@ -175,7 +173,7 @@ impl FloodFill {
     }
 }
 
-fn enlarge<'a>(grid: &GridView<&'a [u8]>) -> GridView<Vec<u8>> {
+fn enlarge(grid: &GridView<&[u8]>) -> GridView<Vec<u8>> {
     let enlarged_width = grid.width() * 2 - 1;
     let mut enlarged_grid = GridView::from_vec(
         enlarged_width,

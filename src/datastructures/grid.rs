@@ -66,9 +66,9 @@ where
     GridView<T>: Index<(usize, usize)>,
     <GridView<T> as Index<(usize, usize)>>::Output: Copy + Sized,
 {
-    pub fn iter<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = <GridView<T> as Index<(usize, usize)>>::Output> + 'a {
+    pub fn iter(
+        &self,
+    ) -> impl Iterator<Item = <GridView<T> as Index<(usize, usize)>>::Output> + '_ {
         GridIterator::new(self)
     }
 }
