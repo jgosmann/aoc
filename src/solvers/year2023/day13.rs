@@ -1,21 +1,23 @@
 use crate::datastructures::grid::GridView;
 use crate::solvers::{Solution, Solver};
 
-fn is_horizontal_reflection(grid: &GridView<&[u8]>, index: usize) -> bool {
+fn is_horizontal_reflection(grid: &GridView<&[u8]>, index: usize, expected_smudges: usize) -> bool {
     let mut top = index;
     let mut bottom = index + 1;
+    let mut smudges: usize = 0;
     loop {
-        if !grid
+        smudges += grid
             .row(top)
             .iter()
             .zip(grid.row(bottom).iter())
-            .all(|(a, b)| a == b)
-        {
+            .map(|(a, b)| (a != b) as usize)
+            .sum::<usize>();
+        if smudges > expected_smudges {
             return false;
         }
 
         if top == 0 || bottom >= grid.height() - 1 {
-            return true;
+            return smudges == expected_smudges;
         }
 
         top -= 1;
@@ -23,21 +25,23 @@ fn is_horizontal_reflection(grid: &GridView<&[u8]>, index: usize) -> bool {
     }
 }
 
-fn is_vertical_reflection(grid: &GridView<&[u8]>, index: usize) -> bool {
+fn is_vertical_reflection(grid: &GridView<&[u8]>, index: usize, expected_smudges: usize) -> bool {
     let mut left = index;
     let mut right = index + 1;
+    let mut smudges: usize = 0;
     loop {
-        if !grid
+        smudges += grid
             .col(left)
             .iter()
             .zip(grid.col(right).iter())
-            .all(|(a, b)| a == b)
-        {
+            .map(|(a, b)| (a != b) as usize)
+            .sum::<usize>();
+        if smudges > expected_smudges {
             return false;
         }
 
         if left == 0 || right >= grid.width() - 1 {
-            return true;
+            return smudges == expected_smudges;
         }
 
         left -= 1;
@@ -45,14 +49,14 @@ fn is_vertical_reflection(grid: &GridView<&[u8]>, index: usize) -> bool {
     }
 }
 
-fn find_grid_reflection(grid: &GridView<&[u8]>) -> Option<usize> {
+fn find_grid_reflection(grid: &GridView<&[u8]>, expected_smudges: usize) -> Option<usize> {
     for i in 0..grid.height() - 1 {
-        if is_horizontal_reflection(grid, i) {
+        if is_horizontal_reflection(grid, i, expected_smudges) {
             return Some(100 * (i + 1));
         }
     }
     for i in 0..grid.width() - 1 {
-        if is_vertical_reflection(grid, i) {
+        if is_vertical_reflection(grid, i, expected_smudges) {
             return Some(i + 1);
         }
     }
@@ -74,15 +78,21 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
     }
 
     fn solve_part_1(&self) -> anyhow::Result<Solution> {
-        let result: usize = self.grids.iter().filter_map(find_grid_reflection).sum();
+        let result: usize = self
+            .grids
+            .iter()
+            .filter_map(|grid| find_grid_reflection(grid, 0))
+            .sum();
         Ok(Solution::with_description("Part 1", result.to_string()))
     }
 
     fn solve_part_2(&self) -> anyhow::Result<Solution> {
-        Ok(Solution::with_description(
-            "Part 2",
-            "not implemented".to_string(),
-        ))
+        let result: usize = self
+            .grids
+            .iter()
+            .filter_map(|grid| find_grid_reflection(grid, 1))
+            .sum();
+        Ok(Solution::with_description("Part 2", result.to_string()))
     }
 }
 
@@ -101,7 +111,7 @@ mod test {
     #[test]
     fn test_example_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day13-1.example"))?;
-        assert_eq!(solver.solve_part_2()?.solution, "TODO");
+        assert_eq!(solver.solve_part_2()?.solution, "400");
         Ok(())
     }
 }

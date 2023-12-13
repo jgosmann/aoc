@@ -221,7 +221,7 @@ impl<'a, T> Index<usize> for Slice<'a, &'a [T]> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
-        if index >= self.len {
+        if index >= self.len() {
             panic!("index exceeds slice length");
         }
         &self.grid.data[self.offset + index * self.stride]
