@@ -59,6 +59,24 @@ impl<T> GridView<T> {
     pub fn nth_index(&self, n: usize) -> (usize, usize) {
         (n / self.width(), n % self.width())
     }
+
+    pub fn row(&self, index: usize) -> Slice<'_, T> {
+        Slice {
+            grid: self,
+            offset: index * self.width,
+            stride: 1,
+            len: self.width(),
+        }
+    }
+
+    pub fn col(&self, index: usize) -> Slice<'_, T> {
+        Slice {
+            grid: self,
+            offset: index,
+            stride: self.width,
+            len: self.height(),
+        }
+    }
 }
 
 impl<T> GridView<T>
@@ -171,6 +189,63 @@ where
             self.row += 1;
         }
         Some(current)
+    }
+}
+
+pub struct Slice<'a, T> {
+    grid: &'a GridView<T>,
+    offset: usize,
+    stride: usize,
+    len: usize,
+}
+
+impl<'a, T> Slice<'a, T> {
+    pub fn len(&self) -> usize {
+        self.len
+    }
+}
+
+impl<'a, T> Slice<'a, &'a [T]>
+where
+    T: Copy,
+{
+    pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
+        SliceIter {
+            slice: self,
+            index: 0,
+        }
+    }
+}
+
+impl<'a, T> Index<usize> for Slice<'a, &'a [T]> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        if index >= self.len {
+            panic!("index exceeds slice length");
+        }
+        &self.grid.data[self.offset + index * self.stride]
+    }
+}
+
+pub struct SliceIter<'a, T> {
+    slice: &'a Slice<'a, &'a [T]>,
+    index: usize,
+}
+
+impl<'a, T> Iterator for SliceIter<'a, T>
+where
+    T: Copy,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.slice.len {
+            return None;
+        }
+        let current = &self.slice[self.index];
+        self.index += 1;
+        Some(*current)
     }
 }
 
