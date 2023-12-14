@@ -1,5 +1,6 @@
 use std::ops::{Index, IndexMut, Range};
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GridView<T> {
     width: usize,
     pub_size: (usize, usize),
@@ -218,6 +219,17 @@ where
 }
 
 impl<'a, T> Index<usize> for Slice<'a, &'a [T]> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        if index >= self.len() {
+            panic!("index exceeds slice length");
+        }
+        &self.grid.data[self.offset + index * self.stride]
+    }
+}
+
+impl<'a, T> Index<usize> for Slice<'a, Vec<T>> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
