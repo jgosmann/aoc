@@ -1,6 +1,6 @@
 use crate::datastructures::grid::GridView;
 use crate::solvers::{Solution, Solver};
-use num::traits::real::Real;
+use rayon::prelude::*;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -99,7 +99,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
     }
 
     fn solve_part_2(&self) -> anyhow::Result<Solution> {
-        let max_energization = (0..self.grid.width())
+        let possible_starts: Vec<_> = (0..self.grid.width())
             .flat_map(|i| [(Dir::Up, (self.grid.height() - 1, i)), (Dir::Down, (0, i))])
             .chain((0..self.grid.height()).flat_map(|i| {
                 [
@@ -107,6 +107,9 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
                     (Dir::Right, (i, 0)),
                 ]
             }))
+            .collect();
+        let max_energization = possible_starts
+            .into_par_iter()
             .map(|start| count_energized_tiles(&self.grid, start))
             .max()
             .unwrap_or_default();
