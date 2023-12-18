@@ -32,9 +32,7 @@ fn roll_south(mut input: GridView<Vec<u8>>) -> GridView<Vec<u8>> {
                         input[(max_free_idx, col_idx)] = b'O';
                         input[(row_idx, col_idx)] = b'.';
                     }
-                    if max_free_idx > 0 {
-                        max_free_idx -= 1;
-                    }
+                    max_free_idx = max_free_idx.saturating_sub(1)
                 }
                 b'#' => max_free_idx = if row_idx > 0 { row_idx - 1 } else { 0 },
                 _ => (),
@@ -74,9 +72,7 @@ fn roll_east(mut input: GridView<Vec<u8>>) -> GridView<Vec<u8>> {
                         input[(row_idx, max_free_idx)] = b'O';
                         input[(row_idx, col_idx)] = b'.';
                     }
-                    if max_free_idx > 0 {
-                        max_free_idx -= 1;
-                    }
+                    max_free_idx = max_free_idx.saturating_sub(1)
                 }
                 b'#' => max_free_idx = if col_idx > 0 { col_idx - 1 } else { 0 },
                 _ => (),
@@ -90,8 +86,7 @@ fn spin_one_cycle(input: GridView<Vec<u8>>) -> GridView<Vec<u8>> {
     let input = roll_north(input);
     let input = roll_west(input);
     let input = roll_south(input);
-    let input = roll_east(input);
-    input
+    roll_east(input)
 }
 
 fn determine_load_rolled_north(grid: &GridView<Vec<u8>>) -> usize {
@@ -128,11 +123,8 @@ fn determine_load(grid: &GridView<Vec<u8>>) -> usize {
     let mut load: usize = 0;
     for col_idx in 0..grid.width() {
         for row_idx in 0..grid.height() {
-            match grid[(row_idx, col_idx)] {
-                b'O' => {
-                    load += grid.height() - row_idx;
-                }
-                _ => (),
+            if grid[(row_idx, col_idx)] == b'O' {
+                load += grid.height() - row_idx;
             }
         }
     }

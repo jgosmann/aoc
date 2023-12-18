@@ -29,9 +29,9 @@ impl<'input> TryFrom<&'input str> for Step<'input> {
     type Error = anyhow::Error;
 
     fn try_from(value: &'input str) -> Result<Self, Self::Error> {
-        if value.ends_with('-') {
+        if let Some(label) = value.strip_suffix('-') {
             Ok(Self {
-                label: &value[..value.len() - 1],
+                label,
                 operation: Operation::Remove,
             })
         } else {
