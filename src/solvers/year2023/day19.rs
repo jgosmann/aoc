@@ -37,6 +37,38 @@ impl MachinePart {
     }
 }
 
+#[derive(Debug, Clone)]
+struct MachinePartRange {
+    x: (u64, u64),
+    m: (u64, u64),
+    a: (u64, u64),
+    s: (u64, u64),
+}
+
+impl From<&MachinePart> for MachinePartRange {
+    fn from(value: &MachinePart) -> Self {
+        Self {
+            x: (value.x, value.x + 1),
+            m: (value.m, value.m + 1),
+            a: (value.a, value.a + 1),
+            s: (value.s, value.s + 1),
+        }
+    }
+}
+
+impl MachinePartRange {
+    fn num_combinations(&self) -> u64 {
+        (self.x.1 - self.x.0)
+            * (self.m.1 - self.m.0)
+            * (self.a.1 - self.a.0)
+            * (self.s.1 - self.s.0)
+    }
+
+    fn is_valid(&self) -> bool {
+        self.x.0 < self.x.1 && self.m.0 < self.m.1 && self.a.0 < self.a.1 && self.s.0 < self.s.1
+    }
+}
+
 impl TryFrom<&str> for MachinePart {
     type Error = anyhow::Error;
 
@@ -71,7 +103,7 @@ impl TryFrom<&str> for MachinePart {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Operation<'a> {
     Accept,
     Reject,
@@ -95,11 +127,45 @@ enum Comparison {
     Greater,
 }
 
+struct SplitConditionRange {
+    truthy: (u64, u64),
+    falsy: (u64, u64),
+}
+
 impl Comparison {
     fn compare(&self, lhs: u64, rhs: u64) -> bool {
         match self {
             Self::Lower => lhs < rhs,
             Self::Greater => lhs > rhs,
+        }
+    }
+
+    fn split_range(&self, range: (u64, u64), at: u64) -> SplitConditionRange {
+        match self {
+            Self::Lower if range.1 < at => SplitConditionRange {
+                truthy: range,
+                falsy: (0, 0),
+            },
+            Self::Lower if at <= range.0 => SplitConditionRange {
+                truthy: (0, 0),
+                falsy: range,
+            },
+            Self::Greater if range.0 > at => SplitConditionRange {
+                truthy: range,
+                falsy: (0, 0),
+            },
+            Self::Greater if at >= range.1 => SplitConditionRange {
+                truthy: (0, 0),
+                falsy: range,
+            },
+            Self::Lower => SplitConditionRange {
+                truthy: (range.0, at),
+                falsy: (at, range.1),
+            },
+            Self::Greater => SplitConditionRange {
+                truthy: (at + 1, range.1),
+                falsy: (range.0, at + 1),
+            },
         }
     }
 }
@@ -170,6 +236,40 @@ impl<'a> Rule<'a> {
             None
         }
     }
+
+    fn evaluate_range(
+        &self,
+        part: &MachinePartRange,
+    ) -> (MachinePartRange, Operation<'a>, MachinePartRange) {
+        let split_var = match self.0.var {
+            Category::ExtremelyCoolLooking => part.x,
+            Category::Musical => part.m,
+            Category::Aerodynamic => part.a,
+            Category::Shiny => part.s,
+        };
+        let split_range = self.0.comparison.split_range(split_var, self.0.threshold);
+        let mut truthy = part.clone();
+        let mut falsy = part.clone();
+        match self.0.var {
+            Category::ExtremelyCoolLooking => {
+                truthy.x = split_range.truthy;
+                falsy.x = split_range.falsy;
+            }
+            Category::Musical => {
+                truthy.m = split_range.truthy;
+                falsy.m = split_range.falsy;
+            }
+            Category::Aerodynamic => {
+                truthy.a = split_range.truthy;
+                falsy.a = split_range.falsy;
+            }
+            Category::Shiny => {
+                truthy.s = split_range.truthy;
+                falsy.s = split_range.falsy;
+            }
+        }
+        (truthy, self.1, falsy)
+    }
 }
 
 impl<'a> TryFrom<&'a str> for Rule<'a> {
@@ -196,6 +296,19 @@ impl<'a> Workflow<'a> {
             .find_map(|rule| rule.evaluate(part))
             .unwrap_or(self.default)
     }
+
+    fn evaluate_range(&self, part: &MachinePartRange) -> Vec<(MachinePartRange, Operation<'a>)> {
+        let mut result = vec![];
+        let default_range = self.rules.iter().fold(part.clone(), |current_part, rule| {
+            let (truthy, op, falsy) = rule.evaluate_range(&current_part);
+            if op != Operation::Reject && truthy.is_valid() {
+                result.push((truthy, op));
+            }
+            falsy
+        });
+        result.push((default_range, self.default));
+        result
+    }
 }
 
 impl<'a> TryFrom<&'a str> for Workflow<'a> {
@@ -219,11 +332,12 @@ impl<'a> TryFrom<&'a str> for Workflow<'a> {
     }
 }
 
-pub struct SolverImpl {
-    accepted_rating: u64,
+pub struct SolverImpl<'input> {
+    workflows: HashMap<&'input str, Workflow<'input>>,
+    parts: Vec<MachinePart>,
 }
 
-impl<'input> Solver<'input> for SolverImpl {
+impl<'input> Solver<'input> for SolverImpl<'input> {
     fn new(input: &'input str) -> anyhow::Result<Self> {
         lazy_static! {
             static ref RE: Regex = Regex::new(r"(?P<label>\w+)\{(?P<rules>.*)\}").unwrap();
@@ -251,13 +365,17 @@ impl<'input> Solver<'input> for SolverImpl {
         let parts = lines
             .map(MachinePart::try_from)
             .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self { workflows, parts })
+    }
 
-        let accepted_rating = parts
+    fn solve_part_1(&self) -> anyhow::Result<Solution> {
+        let accepted_rating: u64 = self
+            .parts
             .iter()
             .map(|part| {
                 let mut current_workflow = "in";
                 loop {
-                    let operation = workflows.get(current_workflow).unwrap().evaluate(part);
+                    let operation = self.workflows.get(current_workflow).unwrap().evaluate(part);
                     match operation {
                         Operation::Accept => return part.rating(),
                         Operation::Reject => return 0,
@@ -266,20 +384,50 @@ impl<'input> Solver<'input> for SolverImpl {
                 }
             })
             .sum();
-        Ok(Self { accepted_rating })
-    }
-
-    fn solve_part_1(&self) -> anyhow::Result<Solution> {
         Ok(Solution::with_description(
             "Part 1",
-            self.accepted_rating.to_string(),
+            accepted_rating.to_string(),
         ))
     }
 
     fn solve_part_2(&self) -> anyhow::Result<Solution> {
+        let mut ranges = vec![(
+            MachinePartRange {
+                x: (1, 4001),
+                m: (1, 4001),
+                a: (1, 4001),
+                s: (1, 4001),
+            },
+            Operation::JumpToLabel("in"),
+        )];
+        while ranges.iter().any(|&(_, op)| op != Operation::Accept) {
+            ranges = ranges
+                .into_iter()
+                .flat_map(|(range, op)| {
+                    if !range.is_valid() {
+                        return vec![];
+                    }
+
+                    match op {
+                        Operation::Accept => vec![(range, op)],
+                        Operation::Reject => vec![],
+                        Operation::JumpToLabel(label) => {
+                            let workflow = self.workflows.get(label).unwrap();
+                            workflow.evaluate_range(&range)
+                        }
+                    }
+                })
+                .filter(|(range, _)| range.is_valid())
+                .collect::<Vec<_>>();
+        }
+        let num_combinations: u64 = ranges
+            .iter()
+            .map(|(range, _)| range)
+            .map(|range| range.num_combinations())
+            .sum();
         Ok(Solution::with_description(
             "Part 2",
-            "not implemented".to_string(),
+            num_combinations.to_string(),
         ))
     }
 }
@@ -299,7 +447,7 @@ mod test {
     #[test]
     fn test_example_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day19-1.example"))?;
-        assert_eq!(solver.solve_part_2()?.solution, "TODO");
+        assert_eq!(solver.solve_part_2()?.solution, "167409079868000");
         Ok(())
     }
 }
