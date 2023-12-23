@@ -18,10 +18,7 @@ impl Eq for RangeKey {}
 
 impl PartialOrd for RangeKey {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        if self == other {
-            return Some(std::cmp::Ordering::Equal);
-        }
-        Some(self.0.start.cmp(&other.0.start))
+        Some(self.cmp(other))
     }
 }
 

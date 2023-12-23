@@ -98,23 +98,23 @@ struct Hand([Card; 5]);
 
 impl PartialOrd for Hand {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let self_type = HandType::from(self);
-        let other_type = HandType::from(other);
-        if self_type != other_type {
-            return Some(self_type.cmp(&other_type));
-        }
-        for (my, theirs) in self.0.iter().zip(other.0.iter()) {
-            if my != theirs {
-                return Some(my.cmp(theirs));
-            }
-        }
-        Some(Ordering::Equal)
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for Hand {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap()
+        let self_type = HandType::from(self);
+        let other_type = HandType::from(other);
+        if self_type != other_type {
+            return self_type.cmp(&other_type);
+        }
+        for (my, theirs) in self.0.iter().zip(other.0.iter()) {
+            if my != theirs {
+                return my.cmp(theirs);
+            }
+        }
+        Ordering::Equal
     }
 }
 

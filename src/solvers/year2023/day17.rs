@@ -45,14 +45,13 @@ struct PathState {
 
 impl PartialOrd for PathState {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.min_heatloss_bound()
-            .partial_cmp(&other.min_heatloss_bound())
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for PathState {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
+        self.min_heatloss_bound().cmp(&other.min_heatloss_bound())
     }
 }
 
