@@ -2,9 +2,11 @@ use std::{
     collections::{BTreeMap, VecDeque},
     convert::identity,
     fmt::Debug,
+    num::NonZeroUsize,
 };
 
 use anyhow::anyhow;
+use num::Integer;
 
 use crate::solvers::{Solution, Solver};
 
@@ -121,6 +123,20 @@ impl<'input> SolverImpl<'input> {
             })
             .collect()
     }
+
+    #[allow(unused)]
+    fn print_graph(&self) {
+        println!("digraph aoc20 {{");
+        println!("  {{");
+        for (key, (module_type, _)) in self.wiring.iter() {
+            println!("    {} [label=\"{}{}\"]", key, module_type, key);
+        }
+        println!("  }}");
+        for (key, (_, edges)) in self.wiring.iter() {
+            println!("  {} -> {{{}}}", key, edges.join(" "));
+        }
+        println!("}}");
+    }
 }
 
 impl<'input> Solver<'input> for SolverImpl<'input> {
@@ -172,10 +188,53 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
     }
 
     fn solve_part_2(&self) -> anyhow::Result<Solution> {
-        Ok(Solution::with_description(
-            "Part 2",
-            "not implemented".to_string(),
-        ))
+        let precursors: Vec<_> = self
+            .wiring
+            .iter()
+            .filter(|(_, (_, destinations))| destinations.contains(&"rx"))
+            .map(|(&src, _)| src)
+            .collect();
+        assert_eq!(precursors.len(), 1);
+        let rx_precursor = precursors[0];
+        let precursors: Vec<_> = self
+            .wiring
+            .iter()
+            .filter(|(_, (_, destinations))| destinations.contains(&rx_precursor))
+            .map(|(&src, _)| src)
+            .collect();
+        let mut first_high_pulse: BTreeMap<&str, Option<NonZeroUsize>> = BTreeMap::new();
+        first_high_pulse.extend(precursors.iter().map(|&p| (p, None)));
+
+        let mut wiring = self.instantiate_modules()?;
+        let mut num_button_presses: usize = 0;
+        while first_high_pulse.iter().any(|(_, first)| first.is_none()) {
+            num_button_presses += 1;
+            let mut unprocessed = VecDeque::from([("button", Pulse::Low, "broadcaster")]);
+            while let Some((src_name, pulse, dst_name)) = unprocessed.pop_front() {
+                if pulse == Pulse::High {
+                    if let Some(None) = first_high_pulse.get(src_name) {
+                        first_high_pulse.insert(src_name, NonZeroUsize::new(num_button_presses));
+                    }
+                }
+                if let Some((module, destinations)) = wiring.get_mut(&dst_name) {
+                    if let Some(output) = module.feed_pulse(InputPulse {
+                        name: src_name,
+                        pulse,
+                    }) {
+                        for destination in destinations.iter() {
+                            unprocessed.push_back((dst_name, output, destination));
+                        }
+                    }
+                }
+            }
+        }
+        let solution = first_high_pulse
+            .values()
+            .map(|value| value.unwrap().get())
+            .reduce(|acc, value| acc.lcm(&value))
+            .unwrap_or_default();
+
+        Ok(Solution::with_description("Part 2", solution.to_string()))
     }
 }
 
