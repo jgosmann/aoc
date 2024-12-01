@@ -6,7 +6,7 @@ use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder, Url,
 };
-use secrecy::{ExposeSecret, Secret};
+use secrecy::{ExposeSecret, SecretBox};
 use tokio_stream::StreamExt;
 
 #[derive(Debug, Clone)]
@@ -16,7 +16,7 @@ pub struct AocClient {
 }
 
 impl AocClient {
-    pub fn new(mut base_url: Url, session_id: Secret<String>) -> anyhow::Result<Self> {
+    pub fn new(mut base_url: Url, session_id: SecretBox<String>) -> anyhow::Result<Self> {
         if base_url.cannot_be_a_base() {
             return Err(anyhow!("base URL is not a valid base"));
         }

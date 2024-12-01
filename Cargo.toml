@@ -13,22 +13,22 @@ anyhow = "1.0.75"
 automod = "1.0.13"
 bytes = "1.5.0"
 chrono = "0.4.31"
-clap = {version = "4.4.10", features = ["derive"]}
+clap = { version = "4.4.10", features = ["derive"] }
 dirs = "5.0.1"
 futures-core = "0.3.29"
-inquire = "0.6.2"
-keyring = "2.0.5"
+inquire = "0.7.5"
+keyring = { version = "3.6.1", features = ["apple-native"] }
 lazy-init = "0.5.1"
 lazy_static = "1.4.0"
-nalgebra = "0.32.3"
+nalgebra = "0.33.2"
 num = "0.4.1"
 rayon = "1.8.0"
 regex = "1.10.2"
-reqwest = {version = "0.11.22", features = ["stream"]}
-secrecy = "0.8.0"
-solver-dispatch = {path = "./solver-dispatch"}
-tokio = {version = "1.34.0", features = ["macros", "rt-multi-thread"]}
+reqwest = { version = "0.12.9", features = ["stream"] }
+secrecy = "0.10.3"
+solver-dispatch = { path = "./solver-dispatch" }
+tokio = { version = "1.34.0", features = ["macros", "rt-multi-thread"] }
 tokio-stream = "0.1.14"
 
 [dev-dependencies]
-rstest = "0.18.2"
+rstest = "0.23.0"
