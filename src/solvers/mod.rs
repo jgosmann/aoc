@@ -1,6 +1,9 @@
 pub mod year2023 {
     automod::dir!(pub "src/solvers/year2023");
 }
+pub mod year2024 {
+    automod::dir!(pub "src/solvers/year2024");
+}
 
 use ansi_term::Style;
 use std::fmt::Display;
