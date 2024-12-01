@@ -1,8 +1,8 @@
 [package]
 authors = ["Jan Gosmann"]
-description = "Advent of Code 2023"
+description = "Advent of Code 2023, 2024"
 edition = "2021"
-name = "aoc2023"
+name = "aoc"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
