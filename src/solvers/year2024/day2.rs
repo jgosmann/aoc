@@ -48,7 +48,7 @@ impl<'input> Solver<'input> for SolverImpl {
             .reports
             .iter()
             .filter(|report| {
-                (0..report.len()).into_iter().any(|i| {
+                (0..report.len()).any(|i| {
                     let (head, tail) = report.split_at(i);
                     is_safe(head.iter().chain(tail[1..].iter()))
                 })

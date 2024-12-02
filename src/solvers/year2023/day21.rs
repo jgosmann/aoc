@@ -12,7 +12,7 @@ pub struct SolverImpl<'input> {
     start: (usize, usize),
 }
 
-impl<'input> SolverImpl<'input> {
+impl SolverImpl<'_> {
     pub fn reachable_in_steps(
         &self,
         start: (usize, usize),

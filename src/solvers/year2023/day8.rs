@@ -8,7 +8,7 @@ pub struct SolverImpl<'input> {
     network: HashMap<&'input str, (&'input str, &'input str)>,
 }
 
-impl<'input> SolverImpl<'input> {
+impl SolverImpl<'_> {
     fn solve<C>(&self, start_node: &str, target_cond: C) -> anyhow::Result<u64>
     where
         C: Fn(&str) -> bool,

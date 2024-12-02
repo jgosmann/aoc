@@ -83,7 +83,7 @@ impl<'a> Conjunction<'a> {
     }
 }
 
-impl<'a> Module for Conjunction<'a> {
+impl Module for Conjunction<'_> {
     fn feed_pulse(&mut self, input: InputPulse) -> Option<Pulse> {
         *self
             .input_states

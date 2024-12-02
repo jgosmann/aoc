@@ -96,7 +96,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
 
 type Nodes = HashMap<(usize, usize), Vec<((usize, usize), usize)>>;
 
-impl<'input> SolverImpl<'input> {
+impl SolverImpl<'_> {
     fn construct_graph(&self) -> Nodes {
         let mut nodes = HashMap::new();
 

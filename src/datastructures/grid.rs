@@ -14,7 +14,7 @@ impl<T> GridView<Vec<T>> {
         }
         Self {
             width,
-            pub_size: ((data.len() + width - 1) / width, width - separator_width),
+            pub_size: (data.len().div_ceil(width), width - separator_width),
             data,
         }
     }
@@ -28,7 +28,7 @@ impl<'a, T> GridView<&'a [T]> {
         Self {
             width,
             data,
-            pub_size: ((data.len() + width - 1) / width, width - separator_width),
+            pub_size: (data.len().div_ceil(width), width - separator_width),
         }
     }
 
@@ -172,7 +172,7 @@ impl<'a, T> GridIterator<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for GridIterator<'a, T>
+impl<T> Iterator for GridIterator<'_, T>
 where
     GridView<T>: Index<(usize, usize)>,
     <GridView<T> as Index<(usize, usize)>>::Output: Copy + Sized,
@@ -200,7 +200,7 @@ pub struct Slice<'a, T> {
     len: usize,
 }
 
-impl<'a, T> Slice<'a, T> {
+impl<T> Slice<'_, T> {
     pub fn len(&self) -> usize {
         self.len
     }
@@ -229,7 +229,7 @@ impl<'a, T> Index<usize> for Slice<'a, &'a [T]> {
     }
 }
 
-impl<'a, T> Index<usize> for Slice<'a, Vec<T>> {
+impl<T> Index<usize> for Slice<'_, Vec<T>> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -245,7 +245,7 @@ pub struct SliceIter<'a, T> {
     index: usize,
 }
 
-impl<'a, T> Iterator for SliceIter<'a, T>
+impl<T> Iterator for SliceIter<'_, T>
 where
     T: Copy,
 {

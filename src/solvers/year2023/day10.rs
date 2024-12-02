@@ -63,7 +63,7 @@ where
     }
 }
 
-impl<'a, T> Iterator for PipesIterator<'a, T>
+impl<T> Iterator for PipesIterator<'_, T>
 where
     GridView<T>: Index<(usize, usize), Output = u8>,
 {
