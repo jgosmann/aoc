@@ -1,6 +1,5 @@
 use crate::solvers::{Solution, Solver};
 use regex::Regex;
-use std::convert::identity;
 
 pub struct SolverImpl<'input> {
     input: &'input str,
@@ -18,7 +17,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
             .map(|m| {
                 m.iter()
                     .skip(1)
-                    .filter_map(identity)
+                    .flatten()
                     .map(|c| c.as_str().parse::<u64>().expect("invalid number"))
                     .product::<u64>()
             })
@@ -40,14 +39,14 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
                             return m
                                 .iter()
                                 .skip(1)
-                                .filter_map(identity)
+                                .flatten()
                                 .filter_map(|c| c.as_str().parse::<u64>().ok())
                                 .product::<u64>();
                         }
                     }
                     _ => {}
                 }
-                return 0;
+                0
             })
             .sum();
         Ok(Solution::with_description("Part 2", result.to_string()))

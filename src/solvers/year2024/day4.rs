@@ -63,7 +63,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
     }
 }
 
-impl<'input> SolverImpl<'input> {
+impl SolverImpl<'_> {
     fn check_for_xmas(&self, (row, col): (usize, usize), direction: (isize, isize)) -> bool {
         if self.grid[(row, col)] != b'X' {
             return false;
