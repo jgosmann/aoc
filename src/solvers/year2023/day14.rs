@@ -137,11 +137,7 @@ pub struct SolverImpl {
 impl<'input> Solver<'input> for SolverImpl {
     fn new(input: &'input str) -> anyhow::Result<Self> {
         let buf = Vec::from(input.as_bytes());
-        let grid = GridView::from_vec(
-            buf.iter().position(|b| *b == b'\n').unwrap_or(buf.len()) + 1,
-            1,
-            buf,
-        );
+        let grid = GridView::from_separated_vec(b'\n', buf);
         Ok(Self { grid })
     }
 

@@ -18,6 +18,17 @@ impl<T> GridView<Vec<T>> {
             data,
         }
     }
+
+    pub fn from_separated_vec(separator: T, data: Vec<T>) -> Self
+    where
+        T: Eq,
+    {
+        let width = data
+            .iter()
+            .position(|item| *item == separator)
+            .unwrap_or(data.len());
+        Self::from_vec(width + 1, 1, data)
+    }
 }
 
 impl<'a, T> GridView<&'a [T]> {
