@@ -123,6 +123,31 @@ async fn write_if_non_existent<P: AsRef<Path>>(path: P, content: &str) -> anyhow
     Ok(())
 }
 
+async fn add_module_declaration(path: impl AsRef<Path>, days_to_add: &[u32]) -> anyhow::Result<()> {
+    const MODULE_DECLARATION_MARKER: &str = "// <<INSERT MARKER>>";
+    let updated_module = String::from_utf8(tokio::fs::read(&path).await?)?
+        .lines()
+        .map(|line| {
+            if line.trim() == MODULE_DECLARATION_MARKER {
+                days_to_add
+                    .iter()
+                    .map(|day| format!("    pub mod day{};", day))
+                    .chain(std::iter::once(format!(
+                        "    {}",
+                        MODULE_DECLARATION_MARKER
+                    )))
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            } else {
+                line.into()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    tokio::fs::write(&path, updated_module).await?;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = MainArgs::parse();
@@ -185,15 +210,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .await
                 .with_context(|| format!("creating directories: {}", base_path.display()))?;
 
-            for day in days {
+            for day in &days {
                 let day_path = base_path.join(format!("day{}.rs", day));
                 let example_path = base_path.join(format!("day{}-1.example", day));
                 let source_content = TEMPLATE.replace("{{day}}", &day.to_string());
                 try_join!(
                     write_if_non_existent(day_path, &source_content),
-                    write_if_non_existent(example_path, "")
+                    write_if_non_existent(example_path, ""),
                 )?;
             }
+            add_module_declaration("src/solvers/mod.rs", &days).await?;
         }
     }
 
