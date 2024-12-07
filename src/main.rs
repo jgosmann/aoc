@@ -54,7 +54,7 @@ struct SolveArgs {
     #[arg(short = 'd', long = "days")]
     days: Option<Vec<u32>>,
 
-    /// Year of the of the advent calendar to solve. Defaults to the current
+    /// Year of the advent calendar to solve. Defaults to the current
     /// year.
     #[arg(short = 'y', long = "year")]
     year: Option<i32>,
