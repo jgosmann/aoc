@@ -1,4 +1,4 @@
-use std::ops::{Index, IndexMut, Range};
+use std::ops::{Deref, DerefMut, Index, IndexMut, Range};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GridView<T> {
@@ -92,8 +92,12 @@ where
     }
 }
 
-impl<T> Index<(usize, usize)> for GridView<&[T]> {
-    type Output = T;
+impl<T> Index<(usize, usize)> for GridView<T>
+where
+    T: Deref,
+    T::Target: Index<usize>,
+{
+    type Output = <<T as Deref>::Target as Index<usize>>::Output;
 
     fn index(&self, index: (usize, usize)) -> &Self::Output {
         if index.1 >= self.width() {
@@ -103,18 +107,11 @@ impl<T> Index<(usize, usize)> for GridView<&[T]> {
     }
 }
 
-impl<T> Index<(usize, usize)> for GridView<&mut [T]> {
-    type Output = T;
-
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
-        if index.1 >= self.width() {
-            panic!("index exceeds view dimensions");
-        }
-        self.data.index(self.width * index.0 + index.1)
-    }
-}
-
-impl<T> IndexMut<(usize, usize)> for GridView<&mut [T]> {
+impl<T> IndexMut<(usize, usize)> for GridView<T>
+where
+    T: DerefMut,
+    T::Target: IndexMut<usize>,
+{
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         if index.1 >= self.width() {
             panic!("index exceeds view dimensions");
@@ -123,28 +120,12 @@ impl<T> IndexMut<(usize, usize)> for GridView<&mut [T]> {
     }
 }
 
-impl<T> Index<(usize, usize)> for GridView<Vec<T>> {
-    type Output = T;
-
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
-        if index.1 >= self.width() {
-            panic!("index exceeds view dimensions");
-        }
-        self.data.index(self.width * index.0 + index.1)
-    }
-}
-
-impl<T> IndexMut<(usize, usize)> for GridView<Vec<T>> {
-    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
-        if index.1 >= self.width() {
-            panic!("index exceeds view dimensions");
-        }
-        self.data.index_mut(self.width * index.0 + index.1)
-    }
-}
-
-impl<T> Index<(usize, Range<usize>)> for GridView<&[T]> {
-    type Output = [T];
+impl<T> Index<(usize, Range<usize>)> for GridView<T>
+where
+    T: Deref,
+    T::Target: Index<Range<usize>>,
+{
+    type Output = <<T as Deref>::Target as Index<Range<usize>>>::Output;
 
     fn index(&self, index: (usize, Range<usize>)) -> &Self::Output {
         if index.1.end > self.width() {
@@ -206,11 +187,13 @@ impl<T> Slice<'_, T> {
     }
 }
 
-impl<'a, T> Slice<'a, &'a [T]>
+impl<T> Slice<'_, T>
 where
-    T: Copy,
+    T: Deref,
+    T::Target: Index<usize>,
+    <T::Target as Index<usize>>::Output: Copy,
 {
-    pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = <T::Target as Index<usize>>::Output> + '_ {
         SliceIter {
             slice: self,
             index: 0,
@@ -218,19 +201,12 @@ where
     }
 }
 
-impl<'a, T> Index<usize> for Slice<'a, &'a [T]> {
-    type Output = T;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        if index >= self.len() {
-            panic!("index exceeds slice length");
-        }
-        &self.grid.data[self.offset + index * self.stride]
-    }
-}
-
-impl<T> Index<usize> for Slice<'_, Vec<T>> {
-    type Output = T;
+impl<T> Index<usize> for Slice<'_, T>
+where
+    T: Deref,
+    T::Target: Index<usize>,
+{
+    type Output = <T::Target as Index<usize>>::Output;
 
     fn index(&self, index: usize) -> &Self::Output {
         if index >= self.len() {
@@ -241,15 +217,17 @@ impl<T> Index<usize> for Slice<'_, Vec<T>> {
 }
 
 pub struct SliceIter<'a, T> {
-    slice: &'a Slice<'a, &'a [T]>,
+    slice: &'a Slice<'a, T>,
     index: usize,
 }
 
 impl<T> Iterator for SliceIter<'_, T>
 where
-    T: Copy,
+    T: Deref,
+    T::Target: Index<usize>,
+    <T::Target as Index<usize>>::Output: Copy,
 {
-    type Item = T;
+    type Item = <T::Target as Index<usize>>::Output;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= self.slice.len {
