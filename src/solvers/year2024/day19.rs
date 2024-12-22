@@ -110,7 +110,7 @@ impl<'a> ArrangementCounter<'a> {
     }
 
     pub fn count(&mut self, design: &'a [u8]) -> usize {
-        if design.len() == 0 {
+        if design.is_empty() {
             return 1;
         }
 

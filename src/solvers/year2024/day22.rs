@@ -40,10 +40,7 @@ impl<'input> Solver<'input> for SolverImpl {
         let result: u64 = self
             .seeds
             .iter()
-            .map(|&seed| {
-                let rng = Rng::new(seed);
-                rng.skip(1999).next().unwrap()
-            })
+            .map(|&seed| Rng::new(seed).nth(1999).unwrap())
             .sum();
         Ok(Solution::with_description("Part 1", result.to_string()))
     }

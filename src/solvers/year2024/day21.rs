@@ -11,9 +11,9 @@ enum DirectionalKeypadButton {
     Action,
 }
 
-impl Into<u8> for &DirectionalKeypadButton {
-    fn into(self) -> u8 {
-        match self {
+impl From<&DirectionalKeypadButton> for u8 {
+    fn from(value: &DirectionalKeypadButton) -> Self {
+        match value {
             DirectionalKeypadButton::Up => b'^',
             DirectionalKeypadButton::Down => b'v',
             DirectionalKeypadButton::Left => b'<',
@@ -50,7 +50,7 @@ trait Keypad {
             } else {
                 DirectionalKeypadButton::Up
             };
-            drow.abs() as usize
+            drow.unsigned_abs() as usize
         ];
         let horizontal_component = vec![
             if dcol > 0 {
@@ -58,7 +58,7 @@ trait Keypad {
             } else {
                 DirectionalKeypadButton::Left
             };
-            dcol.abs() as usize
+            dcol.unsigned_abs() as usize
         ];
         (vertical_component, horizontal_component)
     }
@@ -72,9 +72,9 @@ impl Keypad for NumericKeypad {
         let end_pos = self.button_position(end);
         let (vertical_component, horizontal_component) = self.path_components(start_pos, end_pos);
         let mut result = vec![];
-        if vertical_component.len() == 0 {
+        if vertical_component.is_empty() {
             result.push(horizontal_component);
-        } else if horizontal_component.len() == 0 {
+        } else if horizontal_component.is_empty() {
             result.push(vertical_component);
         } else {
             if !(start_pos.1 == 0 && end_pos.0 == 3) {
@@ -134,9 +134,9 @@ impl Keypad for DirectionalKeypad {
         let end_pos = self.button_position(end);
         let (vertical_component, horizontal_component) = self.path_components(start_pos, end_pos);
         let mut result = vec![];
-        if vertical_component.len() == 0 {
+        if vertical_component.is_empty() {
             result.push(horizontal_component);
-        } else if horizontal_component.len() == 0 {
+        } else if horizontal_component.is_empty() {
             result.push(vertical_component);
         } else {
             if !(start_pos.1 == 0 && end_pos.0 == 0) {

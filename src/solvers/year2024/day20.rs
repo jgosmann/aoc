@@ -78,7 +78,7 @@ impl SolverImpl<'_> {
 
             for dx in -max_cheat_ps..=max_cheat_ps {
                 for dy in -max_cheat_ps..=max_cheat_ps {
-                    let cheat_steps: usize = dx.abs() as usize + dy.abs() as usize;
+                    let cheat_steps: usize = dx.unsigned_abs() + dy.unsigned_abs();
                     if cheat_steps > max_cheat_ps as usize || cheat_steps < 2 {
                         continue;
                     }
