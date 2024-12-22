@@ -54,7 +54,7 @@ impl<'input> Solver<'input> for SolverImpl {
             let mut sold = [false; 19 * 19 * 19 * 19];
             let mut rng = Rng::new(seed);
             let mut previous_price = (seed % 10) as i8;
-            let mut changes: VecDeque<i8> = VecDeque::new();
+            let mut changes: VecDeque<i8> = VecDeque::with_capacity(4);
             for num in (&mut rng).take(3) {
                 let price = (num % 10) as i8;
                 changes.push_back(price - previous_price);
