@@ -31,9 +31,18 @@ impl<'input> Solver<'input> for SolverImpl {
     }
 
     fn solve_part_2(&self) -> anyhow::Result<Solution> {
+        let invalid_id_sum: u64 = self
+            .ranges
+            .iter()
+            .map(|range| {
+                (range.0..=range.1)
+                    .filter(|&x| is_repeating(x))
+                    .sum::<u64>()
+            })
+            .sum();
         Ok(Solution::with_description(
             "Part 2",
-            "not implemented".to_string(),
+            invalid_id_sum.to_string(),
         ))
     }
 }
@@ -60,6 +69,23 @@ fn prefix_to_id(prefix: u64) -> u64 {
     10u64.pow(prefix.ilog10() + 1) * prefix + prefix
 }
 
+fn is_repeating(value: u64) -> bool {
+    let base10_str = value.to_string();
+    let base10_bytes = base10_str.as_bytes();
+    for i in 1..base10_bytes.len() {
+        if base10_bytes.len() % i != 0 {
+            continue;
+        }
+        if (i..base10_bytes.len())
+            .step_by(i)
+            .all(|j| base10_bytes[..i].starts_with(&base10_bytes[j..(j + i)]))
+        {
+            return true;
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 mod test {
     use super::SolverImpl;
@@ -75,7 +101,7 @@ mod test {
     #[test]
     fn test_example_part_2() -> anyhow::Result<()> {
         let solver = SolverImpl::new(include_str!("./day2-1.example"))?;
-        assert_eq!(solver.solve_part_2()?.solution, "TODO");
+        assert_eq!(solver.solve_part_2()?.solution, "4174379265");
         Ok(())
     }
 }
