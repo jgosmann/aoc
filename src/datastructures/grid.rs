@@ -53,6 +53,13 @@ impl<'a, T> GridView<&'a [T]> {
             .unwrap_or(data.len());
         Self::new(width + 1, 1, data)
     }
+
+    pub fn to_owned(&self) -> GridView<Vec<T>>
+    where
+        T: Clone,
+    {
+        GridView::from_vec(self.width, self.width - self.width(), self.data.to_vec())
+    }
 }
 
 impl<T> GridView<T> {
