@@ -20,7 +20,7 @@ impl AocClient {
         if base_url.cannot_be_a_base() {
             return Err(anyhow!("base URL is not a valid base"));
         }
-        if base_url.path_segments().unwrap().last() != Some("") {
+        if base_url.path_segments().unwrap().next_back() != Some("") {
             base_url.path_segments_mut().unwrap().push("");
         }
         let mut headers = HeaderMap::with_capacity(1);

@@ -33,7 +33,7 @@ impl<'input> Solver<'input> for SolverImpl {
 
     fn solve_part_2(&self) -> anyhow::Result<Solution> {
         let (x, y) = self.solve_part_2_general((71, 71));
-        Ok(Solution::with_description("Part 2", format!("{},{}", x, y)))
+        Ok(Solution::with_description("Part 2", format!("{x},{y}")))
     }
 }
 

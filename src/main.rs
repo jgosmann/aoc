@@ -131,10 +131,9 @@ async fn add_module_declaration(path: impl AsRef<Path>, days_to_add: &[u32]) -> 
             if line.trim() == MODULE_DECLARATION_MARKER {
                 days_to_add
                     .iter()
-                    .map(|day| format!("    pub mod day{};", day))
+                    .map(|day| format!("    pub mod day{day};"))
                     .chain(std::iter::once(format!(
-                        "    {}",
-                        MODULE_DECLARATION_MARKER
+                        "    {MODULE_DECLARATION_MARKER}"
                     )))
                     .collect::<Vec<_>>()
                     .join("\n")
@@ -205,14 +204,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             static TEMPLATE: &str = include_str!("day.rs.template");
 
             let RequestedDays { year, days } = solve_args.into();
-            let base_path = PathBuf::from(format!("src/solvers/year{}", year));
+            let base_path = PathBuf::from(format!("src/solvers/year{year}"));
             tokio::fs::create_dir_all(&base_path)
                 .await
                 .with_context(|| format!("creating directories: {}", base_path.display()))?;
 
             for day in &days {
-                let day_path = base_path.join(format!("day{}.rs", day));
-                let example_path = base_path.join(format!("day{}-1.example", day));
+                let day_path = base_path.join(format!("day{day}.rs"));
+                let example_path = base_path.join(format!("day{day}-1.example"));
                 let source_content = TEMPLATE.replace("{{day}}", &day.to_string());
                 try_join!(
                     write_if_non_existent(day_path, &source_content),

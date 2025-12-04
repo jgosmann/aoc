@@ -129,7 +129,7 @@ impl<'input> SolverImpl<'input> {
         println!("digraph aoc20 {{");
         println!("  {{");
         for (key, (module_type, _)) in self.wiring.iter() {
-            println!("    {} [label=\"{}{}\"]", key, module_type, key);
+            println!("    {key} [label=\"{module_type}{key}\"]");
         }
         println!("  }}");
         for (key, (_, edges)) in self.wiring.iter() {

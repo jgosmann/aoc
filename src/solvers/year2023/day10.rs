@@ -187,13 +187,13 @@ fn enlarge(grid: &GridView<&[u8]>) -> GridView<Vec<u8>> {
                 (0, 0) => grid[(i / 2, j / 2)],
                 (_, 0)
                     if b"F7|S".contains(&grid[((i - 1) / 2, j / 2)])
-                        && b"LJ|S".contains(&grid[((i + 1) / 2, j / 2)]) =>
+                        && b"LJ|S".contains(&grid[(i.div_ceil(2), j / 2)]) =>
                 {
                     b'|'
                 }
                 (0, _)
                     if b"FL-S".contains(&grid[(i / 2, (j - 1) / 2)])
-                        && b"7J-S".contains(&grid[(i / 2, (j + 1) / 2)]) =>
+                        && b"7J-S".contains(&grid[(i / 2, j.div_ceil(2))]) =>
                 {
                     b'-'
                 }

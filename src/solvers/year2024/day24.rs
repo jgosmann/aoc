@@ -118,7 +118,7 @@ fn evaluate(
 
 fn set_values(circuit: &mut HashMap<String, Signal>, register: char, mut value: u64) {
     for i in 0..64 {
-        let wire = format!("{}{:02}", register, i);
+        let wire = format!("{register}{i:02}");
         circuit.insert(wire, Signal::Value(value & 1 == 1));
         value >>= 1;
     }
@@ -136,7 +136,7 @@ fn check(
     let y_value = ((y as u64) << index) | carry_value;
     set_values(circuit, 'x', x_value);
     set_values(circuit, 'y', y_value);
-    let result = evaluate(circuit, &format!("z{:02}", index), &mut None);
+    let result = evaluate(circuit, &format!("z{index:02}"), &mut None);
     let expected = ((x as u8) + (y as u8) + (carry as u8)) % 2 == 1;
     result == expected
 }
@@ -210,7 +210,7 @@ impl<'input> Solver<'input> for SolverImpl {
     fn solve_part_1(&self) -> anyhow::Result<Solution> {
         let mut acc: u64 = 0;
         for i in (0..64).rev() {
-            let wire = format!("z{:02}", i);
+            let wire = format!("z{i:02}");
             acc <<= 1;
             if evaluate(&self.circuit, &wire, &mut None) {
                 acc |= 1;
@@ -231,7 +231,7 @@ impl<'input> Solver<'input> for SolverImpl {
         let mut swapped: Vec<String> = Vec::with_capacity(8);
         for i in 0..45 {
             let mut trace = Some(HashSet::new());
-            evaluate(&circuit, &format!("z{:02}", i), &mut trace);
+            evaluate(&circuit, &format!("z{i:02}"), &mut trace);
             let mut trace = trace.unwrap();
             if check_all(&mut circuit, i) {
                 correct_outputs.extend(trace);
@@ -239,7 +239,7 @@ impl<'input> Solver<'input> for SolverImpl {
                 for wire in &correct_outputs {
                     trace.remove(wire);
                 }
-                trace.insert(format!("z{:02}", i));
+                trace.insert(format!("z{i:02}"));
 
                 let mut candidates: Vec<_> = nodes
                     .iter()
@@ -254,8 +254,8 @@ impl<'input> Solver<'input> for SolverImpl {
                             return false;
                         }
                         for j in i + 1..64 {
-                            if dependencies.contains(&format!("x{:02}", j))
-                                || dependencies.contains(&format!("y{:02}", j))
+                            if dependencies.contains(&format!("x{j:02}"))
+                                || dependencies.contains(&format!("y{j:02}"))
                             {
                                 return false;
                             }
@@ -263,7 +263,7 @@ impl<'input> Solver<'input> for SolverImpl {
                         true
                     })
                     .collect();
-                let z = format!("z{:02}", i);
+                let z = format!("z{i:02}");
                 candidates.push(&z);
 
                 for swaps in SwapsIter::new(&candidates) {

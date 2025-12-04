@@ -146,7 +146,7 @@ impl<'input> Solver<'input> for SolverImpl {
         lines.next(); // skip empty line
         let program_def = extract_input_value(lines.next().unwrap_or_default())?;
         let mut program = Vec::with_capacity((program_def.len() + 1) / 4);
-        let mut targets = Vec::with_capacity((program_def.len() + 1) / 2);
+        let mut targets = Vec::with_capacity(program_def.len().div_ceil(2));
         let mut program_def = program_def.split(',');
         while let Some(opcode) = program_def.next() {
             let operand = program_def.next().ok_or(anyhow!("Invalid input"))?;

@@ -39,7 +39,7 @@ impl Trie {
         let index = Self::color_to_index(word[0]);
         self.children[index]
             .as_ref()
-            .map_or(false, |child| child.contains(&word[1..]))
+            .is_some_and(|child| child.contains(&word[1..]))
     }
 
     fn color_to_index(color: u8) -> usize {

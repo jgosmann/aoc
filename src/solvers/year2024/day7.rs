@@ -43,7 +43,7 @@ impl Equation {
 }
 
 fn num_concat(prefix: u64, suffix: u64) -> u64 {
-    format!("{}{}", prefix, suffix).parse().unwrap()
+    format!("{prefix}{suffix}").parse().unwrap()
 }
 
 pub struct SolverImpl {

@@ -136,7 +136,7 @@ impl SolverImpl<'_> {
         for (from, edges) in nodes {
             for (to, length) in edges {
                 if from < to {
-                    println!("  \"{:?}\" -- \"{:?}\" [label=\"{}\"];", from, to, length);
+                    println!("  \"{from:?}\" -- \"{to:?}\" [label=\"{length}\"];");
                 }
             }
         }
