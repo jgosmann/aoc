@@ -64,6 +64,7 @@ pub mod year2025 {
     pub mod day8;
     pub mod day9;
     pub mod day10;
+    pub mod day11;
     // <<INSERT MARKER>>
 }
 
