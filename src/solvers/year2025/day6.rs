@@ -46,7 +46,7 @@ impl<'input> Solver<'input> for SolverImpl<'input> {
         let mut operands: Vec<Vec<u64>> = Vec::new();
         while lines
             .peek()
-            .map(|next_line| !next_line.contains(|c| c == '*' || c == '+'))
+            .map(|next_line| !next_line.contains(['*', '+']))
             .unwrap_or(false)
         {
             operands.push(

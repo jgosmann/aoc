@@ -301,6 +301,7 @@ mod test {
     #[should_panic]
     fn test_invalid_grid_view_indexing(#[case] index: (usize, usize)) {
         let grid = GridView::new(5, 2, &DATA[0..10]);
+        #[allow(clippy::no_effect)]
         grid[index];
     }
 

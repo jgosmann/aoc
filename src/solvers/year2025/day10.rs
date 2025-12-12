@@ -62,8 +62,7 @@ impl<'input> Solver<'input> for SolverImpl {
         let result: usize = self
             .machines
             .iter()
-            .enumerate()
-            .map(|(i, machine)| {
+            .map(|machine| {
                 JoltageFinder::new()
                     .count_btn_presses_joltage(
                         &machine.joltages,
@@ -163,8 +162,8 @@ impl JoltageFinder {
                         }
                         adjusted_joltages[i] -= effect[i];
                     }
-                    for i in 0..adjusted_joltages.len() {
-                        adjusted_joltages[i] /= 2;
+                    for joltage in &mut adjusted_joltages {
+                        *joltage /= 2;
                     }
                     self.count_btn_presses_joltage(&adjusted_joltages, parity_effects)
                         .map(|x| x * 2 + n_btns)
@@ -189,7 +188,7 @@ fn parse_lights(input: &str) -> anyhow::Result<Indicators> {
             if let Some(bit) = bit {
                 return acc.checked_shl(1).expect("overflow") | bit;
             }
-            return acc;
+            acc
         }))
 }
 
